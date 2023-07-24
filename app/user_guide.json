@@ -1,0 +1,34 @@
+{
+    "models": {
+        "Dense_bow": {
+            "name": "Dense (Bow)",
+            "desc": "Dense model trained with Bag of Words text representation"
+        },
+        "Dense_tfidf": {
+            "name": "Dense (TF-IDF)",
+            "desc": "Dense model trained with TF-IDF text representation"
+        },
+        "Dense_seqpad": {
+            "name": "Dense (Sequence and Padding)",
+            "desc": "Dense model trained with Sequence and Padding text representation"
+        },
+        "BiLSTM_seqpad": {
+            "name": "BiLSTM (Sequence and Padding)",
+            "desc": "BiLSTM model trained with Sequence and Padding text representation"
+        }
+    },
+    "labels": {
+        "OK/OTP": {
+            "heading": "ข้อความนี้ปลอดภัย",
+            "desc": "จากผลการตรวจสอบพบว่าข้อความนี้ไม่มีอันตราย น่าจะสามารถเชื่อถือได้ อย่างไรก็ตามท่านไม่ควรเชื่อข้อความ คลิกข้อความ หรือเพิ่มเพื่อนในไลน์ หากไม่ได้รับการตรวจสอบก่อน"
+        },
+        "spam": {
+            "heading": "ข้อความนี้อาจจะเป็นอันตราย / ข้อความโฆษณา / ข้อความสร้างความน่ารำคาญ",
+            "desc": "จากผลการตรวจสอบพบว่าข้อความนี้มีแนวโน้มที่อาจจะเป็นอันตราย หรืออาจเป็นข้อความโฆษณาที่สร้างความน่ารำคาญ ท่านไม่ควรใส่ใจข้อความนี้ ท่านไม่ควรเชื่อถือข้อความ คลิกข้อความ หรือเพิ่มเพื่อนในไลน์ หากไม่ได้รับการตรวจสอบ"
+        },
+        "scam": {
+            "heading": "ข้อความนี้เป็นอันตราย!",
+            "desc": "จากผลการตรวจสอบพบว่าข้อความนี้เป็นอันตราย ข้อความนี้มีจุดประสงค์ต้องการหลอกลวง หรือชักจูงให้ท่านถูกหลอก ท่านไม่ควรคลิกข้อความ เพิ่มเพื่อนในไลน์ หรือเชื่อข้อความที่ได้โดยเด็ดขาด ท่านอาจตกเป็นเหยื่อของมิจฉาชีพและอาจสูญเสียทรัพย์"
+        }
+    }
+}

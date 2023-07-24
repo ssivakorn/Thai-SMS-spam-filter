@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% block title %}ตรวจสอบข้อความ{% endblock %}
+
+{% set max_chars = 400 %}
+
+{% block content %}
+    <h1>ตรวจสอบข้อความ SMS ที่ได้รับ</h1>
+    <form method="post">
+    <div class="row mb-3">
+        <div class="col-auto d-flex align-items-center justify-content-center">
+            <strong>1. เลือก Model:</strong>
+        </div>
+        <div class="col">
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+        {% for name, info in models.items() %}
+            <input type="radio" class="btn-check" name="model" id="{{ name }}" autocomplete="off" value="{{ name }}" {% if ((not selected and loop.first) or (selected == name ))  %} checked {% endif %}">
+            <label class="btn btn-outline-primary" for="{{ name }}">
+                {{ info.get('name') }}
+            </label>
+        {% endfor %}
+        </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="sms_text"><strong>2. ใส่ข้อความของคุณ (สูงสุด {{ max_chars }} ตัวอักษรเท่านั้น)</strong></label>
+        <textarea class="form-control" name="sms_text" id="sms_text" onclick="this.select()" onfocus="this.select()" onmouseup="return false;"  oninput="countChars(this, {{ max_chars }})" maxlength="{{ max_chars }}" rows="4" autofocus>{% if sms_text %}{{ sms_text }}{% endif %}</textarea>
+        <div id="char-count" class="text-muted">เหลือ {{ max_chars }} ตัวอักษร</div>
+    </div>
+    <div class="mb-3">
+        <button class="btn btn-primary" type="submit">ตรวจสอบ</button>
+    </div>
+    </form>
+
+
+    {% if pred_result %}
+    <div class="alert
+        {% if pred_result.get('predict') == 'scam' %} 
+            alert-danger
+        {% elif pred_result.get('predict') == 'OK/OTP' %}
+            alert-success
+        {% elif pred_result.get('predict') == 'spam' %} 
+            alert-warning 
+        {% endif %}"
+        role="alert">
+
+        <div class="row">
+            <div class="col-auto d-flex align-items-center justify-content-center">
+            {% if pred_result.get('predict') == 'scam' %}
+                <span class="fas fa-skull-crossbones fa-3x"></span>
+            {% elif pred_result.get('predict') == 'OK/OTP' %}
+                <span class="fas fa-check-circle fa-3x"></span>
+            {% elif pred_result.get('predict') == 'spam' %}
+                <span class="fas fa-exclamation-triangle fa-3x"></span>
+            {% endif %}
+            </div>
+            <div class="col">
+                <h4 class="alert-heading">{{ pred_result.get('heading') }}</h4>
+                <p>
+                    {{ pred_result.get('text') }}
+                </p>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col">
+                <p class="mb-0">
+                {{ pred_result.get('desc') }}
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col d-flex align-items-center justify-content-end">
+                <span class="me-3 text-secondary">คุณเห็นด้วยกับผลการตรวจการสอบ:</span>
+                <span class="fas fa-thumbs-up text-secondary me-3"
+                    style="cursor: pointer;"
+                    data-bs-toggle="modal" data-bs-target="#thumbsUpFeedbackModal"
+                    onmouseover="this.classList.replace('text-secondary', 'text-success')" 
+                    onmouseout="this.classList.replace('text-success', 'text-secondary')">
+                </span>
+                <span class="fas fa-thumbs-down text-secondary"
+                    style="cursor: pointer;"
+                    data-bs-toggle="modal" data-bs-target="#thumbsDownFeedbackModal"
+                    onmouseover="this.classList.replace('text-secondary', 'text-danger')" 
+                    onmouseout="this.classList.replace('text-danger', 'text-secondary')">
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="accordion" id="accordion">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            เกี่ยวกับ Model การตรวจสอบ
+        </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+        <div class="accordion-body">
+            คุณสามารถเลือกใช้ Model ในการตรวจสอบข้อความได้ โดยเลือกจากด้านบนก่อนการพิมพ์ข้อความ
+            <ul>
+                 {% for name, info in models.items() %}
+                    <li>{{ info.get('name') }}</li>
+                 {% endfor %}
+            </ul>
+        </div>
+        </div>
+    </div>
+
+    {% if pred_result %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            เกี่ยวกับการตรวจสอบข้อความนี้ (For Debugging)
+        </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+        <div class="accordion-body">
+            <table class="table table-hover">
+            <tbody>
+                <tr>
+                    <th scope="row">Model</th>
+                    <td>{{ pred_result.get('model') }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Original text</th>
+                    <td>{{ pred_result.get('text') }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Sanitized text</th>
+                    <td>{{ pred_result.get('sanitized_text') }}</td>
+                <tr>
+                    <th scope="row">Tokenized text</th>
+                    <td>{{ ', '.join(pred_result.get('tokenized_text')) }}
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Prediction:</th>
+                    <td>{% for label, val in pred_result.get('predictions').items() %}
+                            {{ label }}: {{ val }} <br />
+                        {% endfor %}
+                    </td> 
+                </tr>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+
+    </div>
+
+
+    {% if pred_result %}
+    <!-- feedback popup -->
+    <!-- thumbs up -->
+    <div class="modal fade" id="thumbsUpFeedbackModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">
+                <span class="circle-feedback bg-success">
+                    <i class="fas fa-thumbs-up text-white"></i>
+                </span>
+                แสดงความคิดเห็นเพิ่มเติม</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <textarea class="form-control" id="thumbsUpFeedbackTextarea" maxlength={{ max_chars }} placeholder="ใส่ความคิดเห็นเพิ่มเติมของคุณได้ที่นี่" rows="4"></textarea>
+            <div class="text-muted">จำกัดสูงสุดที่ {{ max_chars }} ตัวอักษร</div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="submitThumbsUpFeedback()" >Submit feedback</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- thumbs down -->
+    <div class="modal fade" id="thumbsDownFeedbackModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">
+                <span class="circle-feedback bg-danger">
+                    <i class="fas fa-thumbs-down text-white"></i>
+                </span>
+                แสดงความคิดเห็นเพิ่มเติม</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p class="mb-3"> เพื่อให้การทำนายของเราแม่นยำยิ่งขึ้น คุณคิดว่าข้อความนี้ของคุณควรถูกจัดเป็นประเภทใดถึงจะเหมาะสม</p>
+            <textarea class="form-control mb-3" disabled>{{ pred_result.get('text') }}</textarea>
+
+
+        <form id="thumbsDownFeedbackClass">
+            <div class="form-check">
+                  <input class="form-check-input" type="radio" name="feedbackRadio" id="feedbackRadioOK" value="OK">
+                  <label class="form-check-label" for="feedbackRadioOK">ข้อความปลอดภัย</label>
+            </div>
+            <div class="form-check">
+                  <input class="form-check-input" type="radio" name="feedbackRadio" id="feedbackRadioOTP" value="OTP">
+                  <label class="form-check-label" for="feedbackRadioOTP">ข้อความปลอดภัยและมีลักษณะเป็นการส่ง OTP (One-time Password)</label>
+            </div>
+            <div class="form-check">
+                  <input class="form-check-input" type="radio" name="feedbackRadio" id="feedbackRadioSpam" value="spam">
+                  <label class="form-check-label" for="feedbackRadioSpam">ข้อความน่ารำคาญ</label>
+            </div>
+            <div class="form-check mb-4">
+                  <input class="form-check-input" type="radio" name="feedbackRadio" id="feedbackRadioScam" value="scam">
+                  <label class="form-check-label" for="feedbackRadioScam">ข้อความน่ารำคาญและมีจุดประสงค์เพื่อหลอกลวง</label>
+            </div>
+            </form>
+            <textarea class="form-control" id="thumbsDownFeedbackTextarea" maxlength={{ max_chars }} placeholder="ใส่ความคิดเห็นเพิ่มเติมของคุณได้ที่นี่" rows="4"></textarea>
+            <div class="text-muted">จำกัดสูงสุดที่ {{ max_chars }} ตัวอักษร</div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="submitThumbsDownFeedback()">Submit feedback</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <style>
+    .circle-feedback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    </style>
+
+
+    <script>
+    function submitFeedback(feedback_data, modalID) {
+        feedback_data = {
+            ...feedback_data,
+            'sms_text': '{{ pred_result.get('text') }}',
+            'model': '{{ pred_result.get('model') }}',
+            'pred_class': '{{ pred_result.get('predict') }}'
+        };
+
+        fetch('/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(feedback_data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+        const feedbackModal = new bootstrap.Modal(document.getElementById(modalID));
+        feedbackModal.hide();
+    }
+
+    function submitThumbsUpFeedback() {
+        // Get the thumbs-up feedback text from the textarea
+        const feedback_text = document.getElementById('thumbsUpFeedbackTextarea').value;
+        const feedback_data = {
+            'feedback_positive': true,
+            'feedback_text': feedback_text
+        };
+        submitFeedback(feedback_data, 'thumbsUpFeedbackModal');
+    }
+
+    function submitThumbsDownFeedback() {
+        // Get the thumbs-down feedback text from the textarea
+        const feedback_text = document.getElementById('thumbsDownFeedbackTextarea').value;
+        const feedback_radio = document.getElementById('thumbsDownFeedbackClass');
+        const feedback_class = feedback_radio.elements['feedbackRadio'].value;
+        const feedback_data = {
+            'feedback_positive': false,
+            'feedback_text': feedback_text,
+            'feedback_class': feedback_class
+        };
+        submitFeedback(feedback_data, 'thumbsDownFeedbackModal');
+    }
+    </script>
+
+    {% endif %}
+
+
+    <script>
+    const textarea = document.getElementById('sms_text');
+    const charCount = document.getElementById('char-count');
+
+    textarea.addEventListener('input', function() {
+        const maxLength = this.getAttribute('maxlength');
+        const currentLength = this.value.length;
+        const charsLeft = maxLength - currentLength;
+
+        charCount.innerText = `เหลือ ${charsLeft} ตัวอักษร`;
+    });
+    </script>
+
+{% endblock %}
