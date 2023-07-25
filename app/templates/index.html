@@ -73,13 +73,13 @@
         <div class="row">
             <div class="col d-flex align-items-center justify-content-end">
                 <span class="me-3 text-secondary">คุณเห็นด้วยกับผลการตรวจการสอบ:</span>
-                <span class="fas fa-thumbs-up text-secondary me-3"
+                <span id="thumbsUpIcon" class="fas fa-thumbs-up text-secondary me-3"
                     style="cursor: pointer;"
                     data-bs-toggle="modal" data-bs-target="#thumbsUpFeedbackModal"
                     onmouseover="this.classList.replace('text-secondary', 'text-success')" 
                     onmouseout="this.classList.replace('text-success', 'text-secondary')">
                 </span>
-                <span class="fas fa-thumbs-down text-secondary"
+                <span id="thumbsDownIcon" class="fas fa-thumbs-down text-secondary"
                     style="cursor: pointer;"
                     data-bs-toggle="modal" data-bs-target="#thumbsDownFeedbackModal"
                     onmouseover="this.classList.replace('text-secondary', 'text-danger')" 
@@ -222,6 +222,20 @@
     </div>
     </div>
 
+
+    <!-- Thank you -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 5">
+        <div id="thankyouToast" class="toast hide bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">ขอบคุณ!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ระบบได้รับความคิดเห็นของคุณแล้ว
+            </div>
+        </div>
+    </div>
+
     <style>
     .circle-feedback {
         display: inline-flex;
@@ -236,11 +250,19 @@
 
 
     <script>
+
+    function showThankyouToast() {
+        const thankyouToast = new bootstrap.Toast(document.getElementById('thankyouToast'), {
+            delay: 5000 // set delay to 5 seconds
+        });
+        thankyouToast.show();
+    }
+
     function submitFeedback(feedback_data, modalID) {
         feedback_data = {
             ...feedback_data,
             'sms_text': '{{ pred_result.get('text') }}',
-            'model': '{{ pred_result.get('model') }}',
+            'model_key': '{{ pred_result.get('model_key') }}',
             'pred_class': '{{ pred_result.get('predict') }}'
         };
 
@@ -261,6 +283,14 @@
 
         const feedbackModal = new bootstrap.Modal(document.getElementById(modalID));
         feedbackModal.hide();
+
+
+        const thumbsUpIcon = document.getElementById('thumbsUpIcon');
+        const thumbsDownIcon = document.getElementById('thumbsDownIcon');
+        thumbsUpIcon.style.pointerEvents = 'none';
+        thumbsDownIcon.style.pointerEvents = 'none';
+
+        showThankyouToast();
     }
 
     function submitThumbsUpFeedback() {
@@ -271,6 +301,10 @@
             'feedback_text': feedback_text
         };
         submitFeedback(feedback_data, 'thumbsUpFeedbackModal');
+
+        const thumbsUpIcon = document.getElementById('thumbsUpIcon');
+        thumbsUpIcon.classList.remove('text-secondary');
+        thumbsUpIcon.classList.add('text-success');
     }
 
     function submitThumbsDownFeedback() {
@@ -284,6 +318,9 @@
             'feedback_class': feedback_class
         };
         submitFeedback(feedback_data, 'thumbsDownFeedbackModal');
+        const thumbsDownIcon = document.getElementById('thumbsDownIcon');
+        thumbsDownIcon.classList.remove('text-secondary');
+        thumbsDownIcon.classList.add('text-danger');
     }
     </script>
 

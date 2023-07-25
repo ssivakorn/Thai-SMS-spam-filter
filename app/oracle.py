@@ -137,6 +137,7 @@ class Oracle:
         return {
             'text': text,
             'model': model.get('name'),
+            'model_key': model_name,
             'sanitized_text': sanitized_text,
             'tokenized_text': tokenized_text,
             'predictions': predictions,

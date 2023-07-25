@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 oracle = Oracle()
 feedback_collector = Feedback()
+feedback_collector.init_db()
 
 models = oracle.get_model_opts()
 
@@ -31,7 +32,7 @@ def predict(model, sms_text):
 
 @app.route('/predict', methods=['POST'])
 def predict_API():
-    data = request.get_json()
+    data     = request.get_json()
     sms_text = data.get('sms_text', None)
     model    = data.get('model', None)
     response = {
@@ -54,7 +55,7 @@ def feedback_API():
     # Save feedbacks for re-train and improve prediction models
     res = feedback_collector.save(
         sms_text=data.get('sms_text', None),
-        model=data.get('model', None),
+        model_key=data.get('model_key', None),
         pred_class=data.get('pred_class', None),
         feedback_positive=data.get('feedback_positive', None),
         feedback_class=data.get('feedback_class', None),
@@ -69,10 +70,10 @@ def index():
         if data.get('sms_text'):
             pred_result = predict(data['model'], data['sms_text'])
             return render_template('index.html',
-                                models=models,
-                                pred_result=pred_result,
-                                selected=data['model'],
-                                sms_text=data['sms_text']) 
+                                   models=models,
+                                   pred_result=pred_result,
+                                   selected=data['model'],
+                                   sms_text=data['sms_text']) 
 
     return render_template('index.html',
                            models=models,
