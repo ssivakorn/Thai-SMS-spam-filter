@@ -1,9 +1,13 @@
 import os
+import sys
 import logging
 from flask import Flask, render_template, request, jsonify
 
 from oracle import Oracle
 from feedback import Feedback
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -26,6 +30,10 @@ def predict(model, sms_text):
     pred_result = oracle.predict(model, sms_text)
     pred_result = help_pred_explain(pred_result)
 
+    for key, val in pred_result['predictions'].items():
+        pred_result['predictions'][key] = float(val)
+
+    logger.info(pred_result)
 
     return pred_result
 
